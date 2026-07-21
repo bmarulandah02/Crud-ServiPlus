@@ -8,9 +8,8 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-// Verificamos que sea administrador (cargo_id = 2)
 if (!isset($_SESSION['cargo_id']) || $_SESSION['cargo_id'] != 2) {
-    header("Location: ../views/formulario_empleado.php");
+    header("Location: ../views/dashboard.php?error=permiso");
     exit();
 }
 
