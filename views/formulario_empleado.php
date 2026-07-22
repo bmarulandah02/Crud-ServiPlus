@@ -1,11 +1,19 @@
 <?php
+require_once '../models/MySQL.php';
 session_start();
 
-// Verificamos si el usuario es administrador (ejemplo: cargo_id = 2)
-if (!isset($_SESSION['usuario_id']) || $_SESSION['cargo'] != 2) {
+// Verificamos que exista la sesión
+if (!isset($_SESSION['usuario_id'])) {
+    header("Location: login.php?error=sesion");
+    exit();
+}
+
+// Verificamos que sea administrador
+if (!isset($_SESSION['cargo_id']) || $_SESSION['cargo_id'] != 2) {
     header("Location: dashboard.php?error=permiso");
     exit();
 }
+
 ?>
 
 <!DOCTYPE html>

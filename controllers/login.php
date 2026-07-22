@@ -39,6 +39,8 @@ if (isset($_POST['correo'], $_POST['password']) && !empty($_POST['correo']) && !
             $_SESSION['cargo_id'] = $usuario['cargo_id'];
             $_SESSION['cargo_nombre'] = $usuario['cargo_nombre'];
             $_SESSION['departamento_nombre'] = $usuario['departamento_nombre'];
+            $_SESSION['foto'] = $usuario['foto']; 
+
 
             // Redirigimos al dashboard
             header("Location: ../views/dashboard.php");

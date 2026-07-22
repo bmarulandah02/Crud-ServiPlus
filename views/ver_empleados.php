@@ -8,26 +8,20 @@ if (!isset($_SESSION['usuario_id'])) {
     exit();
 }
 
-// Verificamos que sea administrador
-if ((int)$_SESSION['cargo_id'] != 2) {
-    header("Location: dashboard.php?error=permiso");
-    exit();
-}
-
-// Conexión a la base de datos
 $mysql = new MySQL();
 $mysql->conectar();
 $conn = $mysql->getConexion();
 
-// Consulta empleados con JOIN para mostrar cargo y departamento
-$sql = "SELECT e.id, e.nombre, e.documento, e.correo, e.telefono, e.fecha_ingreso, e.salario,
-               e.foto, c.nombre_car AS cargo, d.nombre_dep AS departamento
+// Traemos todos los empleados
+$sql = "SELECT e.id, e.nombre, e.documento, e.correo, e.telefono, e.fecha_ingreso, 
+               e.salario, e.foto, c.nombre_car AS cargo, d.nombre_dep AS departamento
         FROM empleados e
         INNER JOIN cargos c ON e.cargo_id = c.id_car
         INNER JOIN departamentos d ON e.departamento_id = d.id_dep";
-
-$resultado = $conn->query($sql);
+$result = $conn->query($sql);
+$empleados = $result->fetch_all(MYSQLI_ASSOC);
 ?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -41,11 +35,11 @@ $resultado = $conn->query($sql);
 
     <div class="container mt-5">
         <div class="card shadow">
-            <div class="card-header bg-info text-white">
-                <h3>Lista de Empleados</h3>
+            <div class="card-header bg-dark text-white text-center">
+                <h4>Lista de Empleados</h4>
             </div>
             <div class="card-body">
-                <table class="table table-striped align-middle">
+                <table class="table table-striped text-center">
                     <thead class="table-dark">
                         <tr>
                             <th>ID</th>
@@ -62,15 +56,16 @@ $resultado = $conn->query($sql);
                         </tr>
                     </thead>
                     <tbody>
-                        <?php while ($empleado = $resultado->fetch_assoc()): ?>
+                        <?php foreach ($empleados as $empleado): ?>
                         <tr>
                             <td><?php echo $empleado['id']; ?></td>
                             <td>
                                 <?php if (!empty($empleado['foto'])): ?>
-                                <img src="../uploads/<?php echo $empleado['foto']; ?>" alt="Foto" width="60" height="60"
-                                    class="rounded-circle">
+                                <img src="../assets/fotos_empleados/<?php echo htmlspecialchars($empleado['foto']); ?>"
+                                    alt="Foto" width="60" height="60" class="rounded-circle">
                                 <?php else: ?>
-                                <span class="text-muted">Sin foto</span>
+                                <img src="../assets/fotos_empleados/default.png" alt="Sin foto" width="60" height="60"
+                                    class="rounded-circle">
                                 <?php endif; ?>
                             </td>
                             <td><?php echo $empleado['nombre']; ?></td>
@@ -82,17 +77,19 @@ $resultado = $conn->query($sql);
                             <td><?php echo $empleado['cargo']; ?></td>
                             <td><?php echo $empleado['departamento']; ?></td>
                             <td>
-                                <a href="editar_empleado.php?id=<?php echo $empleado['id']; ?>"
-                                    class="btn btn-warning btn-sm">Editar</a>
+                                <a href="actualizar_empleado.php?id=<?php echo $empleado['id']; ?>"
+                                    class="btn btn-warning">Actualizar</a>
                                 <a href="../controllers/eliminar_empleado.php?id=<?php echo $empleado['id']; ?>"
-                                    class="btn btn-danger btn-sm"
-                                    onclick="return confirm('¿Seguro que deseas eliminar este empleado?');">Eliminar</a>
+                                    class="btn btn-danger">Eliminar</a>
                             </td>
                         </tr>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
-                <a href="dashboard.php" class="btn btn-secondary">Volver al Dashboard</a>
+
+                <div class="text-center mt-3">
+                    <a href="dashboard.php" class="btn btn-secondary">Volver al Dashboard</a>
+                </div>
             </div>
         </div>
     </div>
@@ -100,6 +97,3 @@ $resultado = $conn->query($sql);
 </body>
 
 </html>
-<?php
-$mysql->desconectar();
-?>

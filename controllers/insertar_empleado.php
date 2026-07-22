@@ -13,10 +13,7 @@ if (!isset($_SESSION['cargo_id']) || $_SESSION['cargo_id'] != 2) {
     exit();
 }
 
-// Si llegaste aquí, eres administrador y puedes continuar...
 
-
-// 🔹 Validamos que se envió el formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $mysql = new MySQL();
     $mysql->conectar();
@@ -36,15 +33,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 🔹 Encriptamos la contraseña
     $passwordHash = password_hash($passwordPlano, PASSWORD_BCRYPT);
 
-    // 🔹 Manejo de la foto (opcional)
-    $foto = null;
-    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
-        $nombreFoto = time() . "_" . basename($_FILES['foto']['name']);
-        $rutaDestino = "../uploads/" . $nombreFoto;
-        if (move_uploaded_file($_FILES['foto']['tmp_name'], $rutaDestino)) {
-            $foto = $nombreFoto;
-        }
+   $foto = null;
+if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+    $nombreFoto = time() . "_" . basename($_FILES['foto']['name']);
+    $rutaDestino = __DIR__ . "/../assets/fotos_empleados/" . $nombreFoto;
+
+    if (move_uploaded_file($_FILES['foto']['tmp_name'], $rutaDestino)) {
+        $foto = $nombreFoto; // Guardamos solo el nombre en la BD
+    } else {
+        echo "❌ Error al subir la foto.";
     }
+}
 
     // 🔹 Insertamos el empleado
     $sql = "INSERT INTO empleados 
