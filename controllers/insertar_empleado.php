@@ -73,6 +73,7 @@ if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
 
     $mysql->desconectar();
 } else {
+    
     header("Location: ../views/formulario_empleado.php");
     exit();
 }

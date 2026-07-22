@@ -2,7 +2,6 @@
 require_once '../models/MySQL.php';
 session_start();
 
-// Verificamos que exista la sesión
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: login.php");
     exit();
@@ -12,9 +11,9 @@ $mysql = new MySQL();
 $mysql->conectar();
 $conn = $mysql->getConexion();
 
-// Traemos todos los datos del usuario según su ID
+// Datos del usuario logueado
 $idUsuario = $_SESSION['usuario_id'];
-$sql = "SELECT e.nombre, e.correo, e.foto, c.nombre_car AS cargo
+$sql = "SELECT e.nombre, e.correo, e.foto, e.cargo_id, c.nombre_car AS cargo
         FROM empleados e
         INNER JOIN cargos c ON e.cargo_id = c.id_car
         WHERE e.id = ?";
@@ -25,6 +24,29 @@ $result = $stmt->get_result();
 $usuario = $result->fetch_assoc();
 
 $foto = $usuario['foto'] ?? null;
+$cargo_id = $usuario['cargo_id'];
+
+// Filtro de búsqueda para listar empleados
+$buscar = isset($_GET['buscar']) ? $_GET['buscar'] : "";
+
+$sqlEmpleados = "SELECT e.id, e.nombre, e.documento, e.correo, e.telefono, e.fecha_ingreso, 
+                        e.salario, e.estado, e.foto, c.nombre_car AS cargo, d.nombre_dep AS departamento
+                 FROM empleados e
+                 INNER JOIN cargos c ON e.cargo_id = c.id_car
+                 INNER JOIN departamentos d ON e.departamento_id = d.id_dep";
+
+if (!empty($buscar)) {
+    $sqlEmpleados .= " WHERE e.nombre LIKE ? OR e.documento LIKE ? OR e.correo LIKE ?";
+    $stmt = $conn->prepare($sqlEmpleados);
+    $like = "%$buscar%";
+    $stmt->bind_param("sss", $like, $like, $like);
+    $stmt->execute();
+    $resultEmpleados = $stmt->get_result();
+} else {
+    $resultEmpleados = $conn->query($sqlEmpleados);
+}
+
+$empleados = $resultEmpleados->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -39,7 +61,9 @@ $foto = $usuario['foto'] ?? null;
 <body class="bg-light">
 
     <div class="container mt-5">
-        <div class="card shadow text-center" style="max-width: 500px; margin:auto;">
+
+        <!-- Panel de usuario -->
+        <div class="card shadow text-center mb-4" style="max-width: 500px; margin:auto;">
             <div class="card-header bg-dark text-white">
                 <h4>Panel de Usuario</h4>
             </div>
@@ -57,11 +81,93 @@ $foto = $usuario['foto'] ?? null;
                 <p><strong>Rol:</strong> <?php echo $usuario['cargo']; ?></p>
 
                 <hr>
+                <?php if ($cargo_id == 2): ?>
                 <a href="../controllers/insertar_empleado.php" class="btn btn-success">Agregar Empleado</a>
-                <a href="ver_empleados.php" class="btn btn-primary">Ver/Editar Empleados</a>
+                <?php endif; ?>
                 <a href="../controllers/logout.php" class="btn btn-danger">Cerrar sesión</a>
             </div>
         </div>
+
+        <!-- Tabla de empleados solo para Administrador (2) y Asistente (4) -->
+        <?php if ($cargo_id == 2 || $cargo_id == 4): ?>
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white text-center">
+                <h4>Lista de Empleados</h4>
+            </div>
+            <div class="card-body">
+
+                <!-- Barra de búsqueda -->
+                <form class="d-flex mb-3" method="GET" action="dashboard.php">
+                    <input type="text" name="buscar" class="form-control me-2" placeholder="Buscar empleado..."
+                        value="<?php echo htmlspecialchars($buscar); ?>">
+                    <button class="btn btn-outline-primary">Buscar</button>
+                </form>
+
+                <table class="table table-striped text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Foto</th>
+                            <th>Nombre</th>
+                            <th>Documento</th>
+                            <th>Correo</th>
+                            <th>Teléfono</th>
+                            <th>Fecha Ingreso</th>
+                            <th>Salario</th>
+                            <th>Cargo</th>
+                            <th>Departamento</th>
+                            <th>Estado</th>
+                            <?php if ($cargo_id == 2): ?>
+                            <th>Acciones</th>
+                            <?php endif; ?>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($empleados as $empleado): ?>
+                        <tr>
+                            <td><?php echo $empleado['id']; ?></td>
+                            <td>
+                                <?php if (!empty($empleado['foto'])): ?>
+                                <img src="../assets/fotos_empleados/<?php echo htmlspecialchars($empleado['foto']); ?>"
+                                    alt="Foto" width="60" height="60" class="rounded-circle">
+                                <?php else: ?>
+                                <img src="../assets/fotos_empleados/default.png" alt="Sin foto" width="60" height="60"
+                                    class="rounded-circle">
+                                <?php endif; ?>
+                            </td>
+                            <td><?php echo $empleado['nombre']; ?></td>
+                            <td><?php echo $empleado['documento']; ?></td>
+                            <td><?php echo $empleado['correo']; ?></td>
+                            <td><?php echo $empleado['telefono']; ?></td>
+                            <td><?php echo $empleado['fecha_ingreso']; ?></td>
+                            <td><?php echo $empleado['salario']; ?></td>
+                            <td><?php echo $empleado['cargo']; ?></td>
+                            <td><?php echo $empleado['departamento']; ?></td>
+                            <td>
+                                <?php if ($empleado['estado'] === 'Activo'): ?>
+                                <span class="badge bg-success">Activo</span>
+                                <?php else: ?>
+                                <span class="badge bg-danger">Inactivo</span>
+                                <?php endif; ?>
+                            </td>
+                            <?php if ($cargo_id == 2): ?>
+                            <td>
+                                <a href="../controllers/actualizar_empleado.php?id=<?php echo $empleado['id']; ?>"
+                                    class="btn btn-warning">Actualizar</a>
+                                <a href="../controllers/eliminar_empleado.php?id=<?php echo $empleado['id']; ?>"
+                                    class="btn btn-danger"
+                                    onclick="return confirm('¿Estás seguro de que deseas eliminar este empleado?');">
+                                    Eliminar
+                                </a>
+                            </td>
+                            <?php endif; ?>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
 </body>

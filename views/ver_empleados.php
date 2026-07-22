@@ -77,10 +77,13 @@ $empleados = $result->fetch_all(MYSQLI_ASSOC);
                             <td><?php echo $empleado['cargo']; ?></td>
                             <td><?php echo $empleado['departamento']; ?></td>
                             <td>
-                                <a href="actualizar_empleado.php?id=<?php echo $empleado['id']; ?>"
+                                <a href="../controllers/actualizar_empleado.php?id=<?php echo $empleado['id']; ?>"
                                     class="btn btn-warning">Actualizar</a>
                                 <a href="../controllers/eliminar_empleado.php?id=<?php echo $empleado['id']; ?>"
-                                    class="btn btn-danger">Eliminar</a>
+                                    class="btn btn-danger"
+                                    onclick="return confirm('¿Estás seguro de que deseas eliminar este empleado?');">
+                                    Eliminar
+                                </a>
                             </td>
                         </tr>
                         <?php endforeach; ?>

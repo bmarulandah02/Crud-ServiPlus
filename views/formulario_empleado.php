@@ -94,7 +94,12 @@ if (!isset($_SESSION['cargo_id']) || $_SESSION['cargo_id'] != 2) {
                         <input type="file" name="foto" class="form-control" accept=".jpg,.jpeg,.png">
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Registrar</button>
+                    <button type="submit" class="btn btn-primary"
+                        <?php if (isset($_GET['success']) && $_GET['success'] == 1): ?> <script>
+                        alert("Empleado registrado correctamente");
+                        </script>
+                        <?php endif; ?>>Registrar</button>
+
                     <a href="dashboard.php" class="btn btn-secondary">Volver</a>
                 </form>
             </div>
