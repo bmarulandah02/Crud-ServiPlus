@@ -25,7 +25,7 @@ if (isset($_GET['id'])) {
     if ($empleado && !empty($empleado['foto'])) {
         $rutaFoto = "../assets/fotos_empleados/" . $empleado['foto'];
         if (file_exists($rutaFoto)) {
-            unlink($rutaFoto); // 👈 elimina la foto del servidor
+            unlink($rutaFoto); //  elimina la foto del servidor
         }
     }
 
